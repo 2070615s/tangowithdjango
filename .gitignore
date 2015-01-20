@@ -58,3 +58,6 @@ target/
 
 # IntelliJ idea
 .idea/*
+
+# Vim swap files
+*.swp
