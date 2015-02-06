@@ -1,15 +1,8 @@
-<!doctype html>
-
+{% extends 'base.html' %}
 {% load staticfiles %}
+{% block title %}About{% endblock %}
 
-<html>
-    <head>
-        <title>Rango</title>
-    </head>
-    <body>
-        <p>This tutorial has been put together by Christian Shtarkov, 2070615.</p>
-        <a href="/rango/">Main page</a><br/>
-        <img src="{% static "images/christian.jpg" %}" alt="Picture of me"/>
-    </body>
-</html>
-
+{% block body_block %}
+    <p>This tutorial has been put together by Christian Shtarkov, 2070615.</p>
+    <img src="{% static "images/christian.jpg" %}" alt="Picture of me"/>
+{% endblock %}
