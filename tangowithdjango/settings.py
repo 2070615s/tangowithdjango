@@ -105,3 +105,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
 )
 LOGIN_URL = '/rango/login/'
+
+# Session expiry
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
