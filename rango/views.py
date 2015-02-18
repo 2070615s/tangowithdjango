@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
@@ -10,10 +11,34 @@ from rango.forms import UserForm
 from rango.forms import UserProfileForm
 
 def index(request):
+    request.session.set_test_cookie() # Test cookies
     category_list = Category.objects.order_by('-likes')[:5]
     pages_list = Page.objects.order_by('views')[:5]
     context_dict = {'categories': category_list, 'pages': pages_list}
-    return render(request, 'rango/index.html', context_dict)
+
+    # Get number of visits to the site.
+    visits = int(request.COOKIES.get("visits", "1"))
+    context_dict["visits"] = visits
+    reset_last_visit_time = False
+
+    response = render(request, 'rango/index.html', context_dict)
+
+    if "last_visit" in request.COOKIES:
+        last_visit = request.COOKIES["last_visit"]
+        last_visit_time = datetime.strptime(last_visit[:-7], "%Y-%m-%d %H:%M:%S")
+        if (datetime.now() - last_visit_time).days > 0:
+            visits = visits + 1
+            reset_last_visit_time = True
+    else:
+        reset_last_visit_time = True
+        context_dict["visits"] = visits
+        response = render(request, 'rango/index.html', context_dict)
+
+    if reset_last_visit_time:
+        response.set_cookie('last_visit', datetime.now())
+        response.set_cookie('visits', visits)
+    
+    return response
 
 def about(request):
     return render(request, 'rango/about.html', {})
@@ -70,6 +95,11 @@ def add_page(request, category_name_slug):
     return render(request, 'rango/add_page.html', context_dict)
 
 def register(request):
+    # Test cookies
+    if request.session.test_cookie_worked():
+        print ">>>> TEST COOKIE WORKED!"
+        request.session.delete_test_cookie()
+
     registered = False
 
     if request.method == "POST":
