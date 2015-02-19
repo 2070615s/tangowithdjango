@@ -14,6 +14,7 @@
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'restricted' %}">Restricted</a><br/></li>
                     <li><a href="{% url 'auth_logout' %}">Logout</a><br/></li>
+                    <li><a href="{% url 'auth_password_reset' %}">Reset password</a><br/></li>
                     <li><a href="{% url 'add_category' %}">Add new category</a><br/></li>
                 {% else %}
                     <li><a href="{% url 'registration_register' %}">Register</a><br/>
