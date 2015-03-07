@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 from rango.models import Category
 from rango.models import Page
 from rango.forms import CategoryForm
@@ -49,16 +50,34 @@ def about(request):
 
 def category(request, category_name_slug):
     context_dict = {}
+    context_dict['result_list'] = None
+    context_dict['query'] = None
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            # Run our Bing function to get the results list!
+            result_list = run_query(query)
+
+            context_dict['result_list'] = result_list
+            context_dict['query'] = query
+
     try:
         category = Category.objects.get(slug=category_name_slug)
-        context_dict["category_name"] = category.name
-        pages = Page.objects.filter(category=category)
-        context_dict["pages"] = pages
-        context_dict["category"] = category
-        context_dict["category_name_slug"] = category.slug
+        context_dict['category_name'] = category.name
+        pages = Page.objects.filter(category=category).order_by('-views')
+        context_dict['pages'] = pages
+        context_dict['category'] = category
+        category.views = category.views + 1 # Increment views
+        category.save();
+        context_dict['views'] = category.views
+        
+        if not context_dict['query']:
+            context_dict['query'] = category.name
+
     except Category.DoesNotExist:
         pass
-    
+
     return render(request, 'rango/category.html', context_dict)
 
 @login_required
@@ -115,4 +134,36 @@ def search(request):
 
     return render(request, 'rango/search.html', {'result_list': result_list})
 
+def track_url(request):
+    page_id = None
+    url = '/rango/'
+    if request.method == 'GET':
+        if 'page_id' in request.GET:
+            page_id = request.GET['page_id']
+            try:
+                page = Page.objects.get(id=page_id)
+                page.views = page.views + 1
+                page.save()
+                url = page.url
+            except:
+                pass
+
+    return redirect(url)
+
+@login_required
+def like_category(request):
+
+    cat_id = None
+    if request.method == 'GET':
+        cat_id = request.GET['category_id']
+
+    likes = 0
+    if cat_id:
+        cat = Category.objects.get(id=int(cat_id))
+        if cat:
+            likes = cat.likes + 1
+            cat.likes =  likes
+            cat.save()
+
+    return HttpResponse(likes)
 
