@@ -47,7 +47,7 @@
                         <li><a href="{% url 'registration_register' %}">Register Here</a></li>
                         <li><a href="{% url 'auth_login' %}">Login</a></li>
                     {% endif %}
-                                <li><a href="{% url 'about' %}">About</a></li>
+                        <li><a href="{% url 'about' %}">About</a></li>
 
               </ul>
         </div>
@@ -59,6 +59,18 @@
         <div class="col-sm-3 col-md-2 sidebar">
 
 	        {% block side_block %}
+	        
+	        <ul class="nav nav-list">
+                <li class="nav-header">Find a Category</li>
+                <form>
+                <label></label>
+                <li><input  class="search-query span10" type="text" name="suggestion" value="" id="suggestion" /></li>
+                </form>
+            </ul>
+            <br>
+
+            <div id="cats">
+            </div>
 	        {% get_category_list category %}
 	        {% endblock %}
 
