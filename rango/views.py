@@ -3,9 +3,11 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.shortcuts import redirect
 from rango.models import Category
 from rango.models import Page
+from rango.models import UserProfile
 from rango.forms import CategoryForm
 from rango.forms import PageForm
 from rango.forms import UserForm
@@ -53,9 +55,9 @@ def category(request, category_name_slug):
     context_dict['result_list'] = None
     context_dict['query'] = None
     if request.method == 'POST':
-        query = request.POST['query'].strip()
 
-        if query:
+        if request.POST['query']:
+            query = request.POST['query'].strip()
             # Run our Bing function to get the results list!
             result_list = run_query(query)
 
@@ -180,7 +182,6 @@ def get_category_list(max_results=0, starts_with=''):
         return cat_list
  
 def suggest_category(request):
-
         cat_list = []
         starts_with = ''
         if request.method == 'GET':
@@ -189,4 +190,78 @@ def suggest_category(request):
         cat_list = get_category_list(8, starts_with)
 
         return render(request, 'rango/cats.html', {'cats': cat_list })
+
+@login_required
+def register_profile(request):
+    # A HTTP POST?
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            if 'picture' in request.FILES:
+                profile.picture = request.FILES['picture']
+
+            profile.save()
+
+            return index(request)
+        else:
+            print form.errors
+    else:
+        form = UserProfileForm()
+
+    return render(request, 'registration/profile_registration.html', {'form': form})
+
+@login_required
+def profile(request):
+    context_dict = {}
+    uprofile = UserProfile.objects.get(user = request.user)
+
+    # A HTTP POST?
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+        form.fields['website'].initial = uprofile.website
+        context_dict['form'] = form
+        context_dict['picture'] = uprofile.picture
+
+        if form.is_valid():
+            newprofile = form.save(commit=False)
+            newprofile.user = request.user
+            if 'picture' in request.FILES:
+                newprofile.picture = request.FILES['picture']
+
+            try:
+                newprofile.save()
+            except:
+                uprofile.delete()
+                newprofile.save()
+
+            return index(request)
+        else:
+            print form.errors
+    else:
+        form = UserProfileForm()
+        form.fields['website'].initial = uprofile.website
+        context_dict['form'] = form
+        context_dict['picture'] = uprofile.picture
+
+    return render(request, 'rango/profile.html', context_dict)
+
+def other_profile(request, username):
+    if username == request.user.username:
+        return profile(request)
+    context_dict = {}
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return HttpResponse("No such username")
+
+    uprofile = UserProfile.objects.get(user=user)
+    context_dict['username'] = username
+    context_dict['email'] = user.email
+    context_dict['website'] = uprofile.website
+    context_dict['picture'] = uprofile.picture
+    return render(request, 'rango/other_profile.html', context_dict)
 

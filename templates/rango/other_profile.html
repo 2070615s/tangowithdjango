@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block body_block %}
+    <p><strong>Username:</strong> {{ username }}</p>
+    <p><strong>Email:</strong> {{ email }}</p>
+    <p><strong>Website:</strong>{{ website }}</p>
+    <p>
+    <strong>Picture:</strong>
+    {% if picture %} 
+        <img src="{{ picture.url }}"/> 
+    {% endif %}
+    </p>
+{% endblock %}
+
